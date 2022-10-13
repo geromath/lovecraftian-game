@@ -4,6 +4,8 @@ import events from "./utils/events.js"
 import collisions from "../assets/collisions.js"
 import rectangularCollision from "./utils/collisionDetection.js";
 
+
+// Game Area singleton
 let gameArea = {
   canvas: document.getElementById('canvas'),
   context: canvas.getContext('2d'),
@@ -25,31 +27,13 @@ let gameArea = {
   }
 }
 
-const bg = new Image();
-bg.src = '../assets/map.png';
-const background = new Sprite(640*gameArea.scale, gameArea.scale*512, bg, 0, 0, false)
-const playerImage = new Image();
-playerImage.src = '../assets/char.png';
-
-bg.onload = () => {
-  gameArea.context.drawImage(playerImage, 0, 0);
-}
-
-const update = () => {
-  gameArea.update();
-  boundaries.forEach((b) => {
-    if (rectangularCollision(player, b)) {
-      console.log('col');
-    }
-  })
-  player.update();
-}
-
+// Map collisions json to a 2d map of arrays
 const collisionsMap = [];
 for(let i = 0; i < collisions.length; i += 40) {
   collisionsMap.push(collisions.slice(i, i + 40));
 }
 
+// Spawn boundries using mapped collisions
 const boundaries = [];
 collisionsMap.forEach((row, i) => {
   row.forEach((tile, j) => {
@@ -57,6 +41,26 @@ collisionsMap.forEach((row, i) => {
   })
 })
 
+/*  
+Set up the background
+Should be done in a separate file maybe to handle level loading?
+*/
+const bg = new Image();
+bg.src = '../assets/map.png';
+const background = new Sprite(gameArea.width*gameArea.scale, gameArea.scale*gameArea.height, bg, 0, 0, false)
+
+/* Set up the player sprite/character */
+// TODO: refactor to use a Player class that inherits from Sprite
+const playerImage = new Image();
+playerImage.src = '../assets/char.png';
+const player = new Sprite(16*gameArea.scale, 32*gameArea.scale, playerImage, 200, 200, true);
+
+const update = () => {
+  gameArea.update();
+  player.update();
+}
+
+// Initiate the startup
 const start = () => {
   console.log('Starting');
   events.start();
@@ -64,7 +68,7 @@ const start = () => {
   boundaries.push(new Boundary({position: {x: 4* gameArea.tileSize * gameArea.scale, y: 4* gameArea.tileSize * gameArea.scale}, width: 16 * gameArea.scale, height: 16 * gameArea.scale}))
 }
 
-let player = new Sprite(16*gameArea.scale, 32*gameArea.scale, playerImage, 200, 200, true);
+// Start the game!
 start();
 
 export default gameArea;
