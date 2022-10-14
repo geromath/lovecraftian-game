@@ -1,9 +1,10 @@
 import rectangularCollision from "../utils/collisionDetection.js";
-import { player, exits } from "../main.js";
+import { player } from "../main.js";
 import gameArea from "../main.js";
+import level from "../controllers/LevelController.js";
 
 class Door {
-  constructor({position, width, height, goToRoom}) {
+  constructor({ position, width, height, goToRoom }) {
     this.position = position;
     this.width = width;
     this.height = height;
@@ -12,9 +13,10 @@ class Door {
 
   // Detection done, now change map
   update() {
-    for(let j = 0; j < exits.length; j++) {
-      if (rectangularCollision(exits[j], player)) {
-        gameArea.room = this.goToRoom;
+    for (let j = 0; j < level.exits.length; j++) {
+      if (rectangularCollision(level.exits[j], player)) {
+        // Update what level I am in
+        console.log("I hit the door!");
       }
     }
   }

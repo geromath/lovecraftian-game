@@ -1,7 +1,7 @@
 import gameArea from "../main.js";
 import events from "../utils/events.js";
-import { boundaries } from "../main.js";
 import rectangularCollision from "../utils/collisionDetection.js";
+import level from "../controllers/LevelController.js";
 
 class Player {
   constructor(image, width, height, x, y) {
@@ -18,16 +18,16 @@ class Player {
       0,
       9,
       this.image.width,
-      this.image.height-9,
+      this.image.height - 9,
       this.position.x,
       this.position.y,
       this.width,
-      this.height,
+      this.height
     );
   }
 
   checkForCollision(direction) {
-    for (let i = 0; i < boundaries.length; i++) {
+    for (let i = 0; i < level.boundaries.length; i++) {
       if (
         rectangularCollision(
           {
@@ -37,7 +37,7 @@ class Player {
               y: this.position.y + this.speed * direction.y,
             },
           },
-          boundaries[i]
+          level.boundaries[i]
         )
       ) {
         return true;
