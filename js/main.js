@@ -2,7 +2,11 @@ import Boundary from "./components/Boundary.js";
 import Sprite from "./components/Sprite.js";
 import events from "./utils/events.js";
 import collisions from "../assets/collisions.js";
-import rectangularCollision from "./utils/collisionDetection.js";
+import grad from "./extra/gradient.js";
+import doors from "../assets/doors.js";
+import Door from "./components/Door.js";
+import Player from "./components/Player.js";
+import level from "./controllers/LevelController.js";
 
 // Game Area singleton
 let gameArea = {
@@ -14,22 +18,28 @@ let gameArea = {
   y: 0,
   tileSize: 16,
   scale: 2,
+  room: 0,
   start: function () {
     this.canvas.width = this.width;
     this.canvas.height = this.height;
     this.interval = setInterval(update, 1000 / 50);
     this.context.imageSmoothingEnabled = false;
+    
+    this.background = level.load(this.width, this.height, "../assets/room" + gameArea.room + ".png");
+  },
+  reloadLevel: function () {
+    this.background.image.src = "../assets/room" + this.room + ".png";
   },
   update: function () {
     this.context.clearRect(0, 0, this.width, this.height);
-    background.update();
+    this.background.update();
   },
 };
 
 // Map collisions json to a 2d map of arrays
 const collisionsMap = [];
-for (let i = 0; i < collisions.length; i += 40) {
-  collisionsMap.push(collisions.slice(i, i + 40));
+for (let i = 0; i < collisions[gameArea.room].length; i += 20) {
+  collisionsMap.push(collisions[gameArea.room].slice(i, i + 20));
 }
 
 // Spawn boundries using mapped collisions
@@ -40,8 +50,8 @@ collisionsMap.forEach((row, i) => {
       boundaries.push(
         new Boundary({
           position: {
-            x: j * gameArea.tileSize * gameArea.scale,
-            y: i * gameArea.tileSize * gameArea.scale,
+            x: j * gameArea.tileSize * 2,
+            y: i * gameArea.tileSize * 2,
           },
           width: 16 * gameArea.scale,
           height: 16 * gameArea.scale,
@@ -50,56 +60,57 @@ collisionsMap.forEach((row, i) => {
   });
 });
 
-/*  
-Set up the background
-Should be done in a separate file maybe to handle level loading?
-*/
-const bg = new Image();
-bg.src = "../assets/map.png";
-const background = new Sprite(
-  gameArea.width * gameArea.scale,
-  gameArea.scale * gameArea.height,
-  bg,
-  0,
-  0,
-  false
-);
+const doorMap = []
+for (let i = 0; i < doors.length; i += 20) {
+  doorMap.push(doors.slice(i, i + 20));
+}
+
+const exits = []
+doorMap.forEach((row, i) => {
+  row.forEach((tile, j) => {
+    tile !== 0 &&
+      exits.push(
+        new Door({
+          position: {
+            x: j * gameArea.tileSize * 2,
+            y: i * gameArea.tileSize * 2,
+          },
+          width: 16 * gameArea.scale,
+          height: 16 * gameArea.scale,
+          goToRoom: tile,
+        })
+      );
+  });
+});
 
 /* Set up the player sprite/character */
 // TODO: refactor to use a Player class that inherits from Sprite
 const playerImage = new Image();
 playerImage.src = "../assets/char.png";
-const player = new Sprite(
-  16 * gameArea.scale,
-  32 * gameArea.scale,
+const player = new Player(
   playerImage,
-  100,
-  100,
-  true
+  16 * gameArea.scale,
+  24 * gameArea.scale,
+  16 * gameArea.scale,
+  16 * gameArea.scale,
 );
 
 // Should be moved later
-const grad = {
-  update: function () {
-    let grd = gameArea.context.createRadialGradient(
-      player.position.x + player.width / 2,
-      player.position.y + player.height / 2,
-      1,
-      player.position.x + player.width / 2,
-      player.position.y + player.height / 2,
-      300
-    );
-    grd.addColorStop(0, "transparent");
-    grd.addColorStop(0.8, "rgba(0, 0, 0, .4)");
-    gameArea.context.fillStyle = grd;
-    gameArea.context.fillRect(0, 0, gameArea.width, gameArea.height);
-  },
-};
 
 const update = () => {
   gameArea.update();
   player.update();
   grad.update();
+
+  // For debugging
+  for(let i = 0; i < boundaries.length; i++) {
+    boundaries[i].update();
+  }
+
+  // Updating door for now
+  for(let j = 0; j < exits.length; j++) {
+    exits[j].update();
+  }
 };
 
 // Initiate the startup
@@ -109,8 +120,9 @@ const start = () => {
   gameArea.start();
 };
 
+
 // Start the game!
 start();
 
 export default gameArea;
-export { boundaries };
+export { boundaries, player, exits };
